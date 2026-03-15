@@ -45,7 +45,7 @@ Spring Boot / Spring Security / MyBatis / JPA / SSE / AWS EC2
 - Statistics Domain 구현
 - Product 조회 기능 구현 (CQRS)
 
-👉 [Frans 프로젝트 자세히 보기](./projects/frans.md)
+[Frans 프로젝트 자세히 보기](./projects/frans.md)
 
 ---
 
@@ -63,4 +63,4 @@ Spring Boot / MyBatis / Redis / Vue.js
 - Frontend UI 구현
 - Redis 기반 이미지 저장 구조 활용
 
-👉 [Groo 프로젝트 자세히 보기](./projects/groo.md)
+[Groo 프로젝트 자세히 보기](./projects/groo.md)
