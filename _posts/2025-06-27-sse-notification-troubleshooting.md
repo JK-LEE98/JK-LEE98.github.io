@@ -1,8 +1,8 @@
 ---
-title: "SSE 실시간 알림 Production 환경 문제 해결"
+title: "SSE 실시간 알림 시스템 Production 장애 해결"
 date: 2025-06-27
-categories: [Backend, TroubleShooting]
-tags: [SpringBoot, SSE, Concurrency]
+categories: [Backend, SSE, TroubleShooting]
+tags: [SpringBoot, SSE, Async, Transaction]
 ---
 
 # SSE 실시간 알림 Production 환경 문제 해결
@@ -214,4 +214,4 @@ keysToRemove.forEach(eventCache::remove);
 * SSE 시스템에서 emitter 관리의 중요성
 * 컬렉션 순회 중 수정이 발생할 수 있는 동시성 문제
 * 실시간 이벤트 시스템에서 안정적인 연결 관리 전략
-* Local 환경과 Production 환경의 동작차이
+* Local 환경과 Production 환경의 동작 차이
