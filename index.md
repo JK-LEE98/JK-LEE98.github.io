@@ -67,4 +67,4 @@ Spring Boot / MyBatis / Redis / Vue.js
 
 # Technical Writing
 
-- [SSE 실시간 알림 Production 장애 해결](/_posts/2025-06-27-sse-notification-troubleshooting)
+- [SSE 실시간 알림 Production 장애 해결](/2026/03/15/sse-notification-troubleshooting.html)
