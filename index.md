@@ -54,4 +54,4 @@ Query는 MyBatis로 분리하여 설계했습니다.
 # GitHub
 
 프로젝트 Repository  
-👉 https://github.com/본인프로젝트링크
+👉 https://github.com/x1-company/be14-fin-frans-be.git
