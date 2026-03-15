@@ -64,3 +64,7 @@ Spring Boot / MyBatis / Redis / Vue.js
 - Redis 기반 이미지 저장 구조 활용
 
 [Groo 프로젝트 자세히 보기](./projects/groo.md)
+
+# Technical Writing
+
+- [SSE 실시간 알림 Production 장애 해결](/_posts/2026-03-15-sse-notification-troubleshooting)
