@@ -1,3 +1,8 @@
+---
+layout: default
+title: Home
+---
+
 # 이준규 | Backend Developer
 
 Spring Boot 기반 백엔드 개발자입니다.  
