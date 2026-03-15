@@ -1,8 +1,8 @@
----
-title: "SSE 실시간 알림 시스템 Production 장애 해결"
-date: 2025-06-27
-categories: [Backend, SSE, TroubleShooting]
-tags: [SpringBoot, SSE, Async, Transaction]
+--- 
+title: "SSE 실시간 알림 Production 환경 문제 해결" 
+date: 2025-06-27 
+categories: [Backend, TroubleShooting] 
+tags: [SpringBoot, SSE, Concurrency] 
 ---
 
 # SSE 실시간 알림 Production 환경 문제 해결
