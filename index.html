@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/portfolio.css" />
+  <link rel="stylesheet" href="/assets/portfolio.css" />
 </head>
 <body>
   <div class="page">
@@ -41,12 +41,12 @@
           <li>
             <div class="experience-title">한화시스템 beyond SW camp</div>
             <div class="experience-period">2024.12 ~ 2025.06</div>
-            <div class="experience-desc">Spring Boot 기반 ERP 내부 알림 서비스 개발</div>
+            <div class="experience-desc">Spring Boot 기반 ERP 시스템 내부 알림 서비스 개발</div>
           </li>
           <li>
             <div class="experience-title">프로그래머스 단기심화 벡앤드 데브코스</div>
             <div class="experience-period">2026.03 ~ 2026.05(예정)</div>
-            <div class="experience-desc">Spring Boot 기반 MSA 환경에서 Kafka 이벤트 스트리밍과 TossPayments 결제 시스템을 활용한 주문·결제 플랫폼 백엔드 개발</div>
+            <div class="experience-desc">Kafka 이벤트 스트리밍과 TossPayments 결제 시스템을 활용한 주문·결제 플랫폼 백엔드 서비스 개발 (Spring Boot / MSA)</div>
           </li>
         </ul>
       </section>
@@ -162,8 +162,8 @@
         <article class="project-card">
           <header class="project-header">
             <div>
-              <h3>Frans – 프랜차이즈 주문 및 결제 관리 시스템</h3>
-              <p class="project-tech">Spring Boot / Spring Security / MyBatis / JPA / SSE / AWS EC2</p>
+              <h3>Frans – 프랜차이즈 주문 및 결재 관리 시스템</h3>
+              <p class="project-tech">Spring Boot / Spring Security / JPA / MyBatis / SSE / CQRS / AWS EC2</p>
             </div>
             <button type="button" class="project-toggle" data-target="frans-detail">
               프로젝트 상세 보기
@@ -172,9 +172,14 @@
 
           <div id="frans-detail" class="project-detail">
             <p class="body-text">
-              본사(HQ)와 가맹점 간 주문 및 결재 프로세스를 관리하는 서비스입니다.<br />
-              주문 상태 변경 및 결재 요청 발생 시 사용자에게 실시간 알림을 제공하여<br />
-              업무 흐름을 효율적으로 관리할 수 있도록 설계했습니다.
+              대형 치킨 프랜차이즈 운영 구조를 모티브로 한 주문 및 운영 관리 시스템입니다.<br />
+              본사(HQ), 공급처, 가맹점 간의 운영 프로세스를 관리하기 위해 설계되었습니다.<br />
+              <br />
+              사용자는 로그인 시 DB에 저장된 역할(Role) 정보를 기반으로<br />
+              본사 직원, 공급처, 가맹점주로 구분되며 각 사용자 유형에 맞는 기능이 제공됩니다.<br />
+              <br />
+              서비스에서는 자재 관리, 주문 및 발주 관리, 결제 프로세스, 배송 관리,<br />
+              통계 분석, 실시간 알림 기능 등을 통해 프랜차이즈 운영 업무를 지원합니다.
             </p>
 
             <h4 class="project-subtitle">Tech Stack</h4>
@@ -189,14 +194,14 @@
 
             <h4 class="project-subtitle">Role</h4>
             <ul class="project-role">
-              <li>Notification Domain 설계 및 구현</li>
-              <li>Statistics Domain 구현</li>
-              <li>Product 조회 기능 구현 (CQRS)</li>
+              <li>Notification Domain 설계 및 구현 (SSE 기반 실시간 알림)</li>
+              <li>Statistics Domain 설계 및 월별 통계 데이터 생성 기능 구현</li>
+              <li>CQRS 구조를 적용한 Product 조회 기능 구현 (JPA / MyBatis 분리)</li>
             </ul>
 
             <h4 class="project-subtitle">Real-time Notification System (SSE)</h4>
             <p class="body-text">
-              주문 및 결재 프로세스에서 발생하는 이벤트를 사용자에게 실시간으로 전달하기 위해<br />
+              주문 및 결제 프로세스에서 발생하는 이벤트를 사용자에게 실시간으로 전달하기 위해<br />
               SSE(Server-Sent Events)를 활용한 알림 시스템을 구현했습니다.
             </p>
             <ul class="project-role">
@@ -211,8 +216,8 @@
               EmitterRepository로 사용자별 SSE 연결을 관리하고 Event Cache를 활용하여 알림 유실을 방지했습니다.
             </p>
             <figure class="project-figure">
-              <a href="assets/sse-architecture.png" target="_blank" class="project-image-link">
-                <img src="assets/sse-architecture.png" alt="SSE notification architecture diagram" class="project-image" loading="eager" />
+              <a href="/assets/sse-architecture.png" target="_blank" class="project-image-link">
+                <img src="/assets/sse-architecture.png" alt="SSE notification architecture diagram" class="project-image" loading="eager" />
               </a>
               <figcaption class="project-caption body-muted">
                 SSE 기반 실시간 알림 아키텍처
@@ -227,8 +232,26 @@
 
             <h4 class="project-subtitle">Statistics Domain</h4>
             <p class="body-text">
-              서비스 운영을 위한 통계 데이터를 제공하기 위해 Statistics 도메인을 구현했습니다.<br />
-              MyBatis 기반 조회 쿼리를 작성하여 주문 데이터를 기반으로 통계 정보를 제공하도록 구현했습니다.
+              서비스 운영을 위한 통계 데이터를 제공하기 위해 Statistics 도메인을 설계하고 구현했습니다.<br />
+              <br />
+              실시간 주문 데이터를 직접 조회할 경우 조회 성능 저하와 원본 데이터 훼손 위험이 있기 때문에<br />
+              별도의 통계 테이블을 생성하여 데이터를 관리하도록 구조를 설계했습니다.<br />
+              <br />
+              Spring Scheduler를 활용하여 매월 지정된 시간에 이전 달의 주문 데이터를 집계하고<br />
+              통계 테이블에 저장하도록 구현했습니다.<br />
+              <br />
+              또한 사용자 역할(Role)에 따라 조회 가능한 통계 범위를 다르게 설계하여<br />
+              가맹점주, 영업팀, 관리자 등 각 사용자 유형에 맞는 통계 데이터를 제공하도록 구현했습니다.
+            </p>
+            <br />
+
+            <h4 class="project-subtitle">Statistics Scheduler</h4>
+            <p class="body-text">
+            Spring Scheduler를 활용하여 매월 정해진 시간에 이전 달의 주문 데이터를 집계하고<br />
+            통계 테이블에 저장하는 배치 작업을 구현했습니다.<br />
+            <br />
+              통계 유형별 로직을 분리하기 위해 StatisticsGenerator 구조를 설계하여<br />
+              새로운 통계 유형이 추가되더라도 쉽게 확장할 수 있도록 구현했습니다.
             </p>
             <br />
             <a href="https://github.com/x1-company/be14-fin-frans-be" target="_blank" class="project-link external">
@@ -270,8 +293,8 @@
 
             <h4 class="project-subtitle">S3 활용 경험</h4>
             <p class="body-text">
-              이미지 데이터를 빠르게 조회하기 위해 S3 기반 이미지 저장 구조를 활용했습니다.<br />
-              Postman으로 S3에 이미지 데이터를 업로드하고 서비스에서 이미지 조회 기능을 테스트했습니다.
+              이미지 파일 저장을 위해 AWS S3 기반 스토리지 구조를 활용했습니다.<br />
+              Postman을 통해 S3 업로드 API를 테스트하고 서비스에서 이미지 조회 기능을 검증했습니다.
             </p>
             <br />
             <a href="https://github.com/x1-company/be14-4th-x1-GROO-BE.git" target="_blank" class="project-link external">
@@ -282,7 +305,7 @@
       </section>
 
       <section id="troubleshooting" class="section">
-        <h2 class="section-title">Trouble Shootings</h2>
+        <h2 class="section-title">Troubleshooting</h2>
 
         <article class="project-card">
           <header class="project-header">
@@ -338,7 +361,7 @@
     <aside class="sidebar">
       <div class="profile-card">
         <div class="avatar-wrapper">
-          <img src="assets/LeeJunKyu.jpeg" alt="Profile photo" class="avatar" />
+          <img src="/assets/LeeJunKyu.jpeg" alt="Profile photo" class="avatar" />
         </div>
         <div class="profile-name">LeeJunKyu</div>
         <div class="profile-role">Backend Developer</div>

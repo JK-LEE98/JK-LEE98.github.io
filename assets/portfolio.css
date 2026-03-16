@@ -277,7 +277,7 @@ body {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 560px;
+  max-height: 420px;
   object-fit: contain;
   background: #ffffff;
 }
@@ -322,8 +322,8 @@ body {
 }
 
 .avatar-wrapper {
-  width: 120px;
-  height: 120px;
+  width: 96px;
+  height: 96px;
   margin: 0 auto 16px;
   border-radius: 999px;
   overflow: hidden;
