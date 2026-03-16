@@ -10,7 +10,6 @@ Spring Boot 기반 백엔드 개발자입니다.
 SSE(Server-Sent Events)를 활용한 실시간 알림 시스템을 구현한 경험이 있습니다.
 
 ---
-<br><br>
 
 # Tech Stack
 ## Backend
@@ -41,7 +40,6 @@ SSE(Server-Sent Events)를 활용한 실시간 알림 시스템을 구현한 경
 
 ---
 
-<br><br>
 # Projects
 
 ## 1. Frans
@@ -66,7 +64,6 @@ Spring Boot / Spring Security / MyBatis / JPA / SSE / AWS EC2
 
 ---
 
-<br><br>
 
 ## 2. Groo
 
@@ -85,8 +82,6 @@ Spring Boot / MyBatis / Redis / Vue.js
 - Redis 기반 이미지 저장 구조 활용
 
 [Groo 프로젝트 자세히 보기](./projects/groo.md)
-
-<br><br>
 
 ---
 
