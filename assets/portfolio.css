@@ -265,6 +265,35 @@ body {
   margin: 16px 0 6px;
 }
 
+.project-figure {
+  margin: 14px 0 18px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: #ffffff;
+}
+
+.project-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+  object-fit: contain;
+  background: #ffffff;
+}
+
+.project-image-link {
+  display: block;
+}
+
+.project-caption {
+  padding: 10px 12px;
+  margin: 0;
+  background: #f3f4f6;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
 .contact-list {
   list-style: none;
   padding: 0;
