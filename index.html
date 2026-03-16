@@ -162,7 +162,7 @@
         <article class="project-card">
           <header class="project-header">
             <div>
-              <h3>Frans – 프랜차이즈 주문 및 결재 관리 시스템</h3>
+              <h3>Frans – 프랜차이즈 ERP 주문·발주 관리 시스템</h3>
               <p class="project-tech">Spring Boot / Spring Security / JPA / MyBatis / SSE / CQRS / AWS EC2</p>
             </div>
             <button type="button" class="project-toggle" data-target="frans-detail">
@@ -181,7 +181,7 @@
               서비스에서는 자재 관리, 주문 및 발주 관리, 결제 프로세스, 배송 관리,<br />
               통계 분석, 실시간 알림 기능 등을 통해 프랜차이즈 운영 업무를 지원합니다.
             </p>
-
+            <br />
             <h4 class="project-subtitle">Tech Stack</h4>
             <ul class="project-role">
               <li>Spring Boot</li>
@@ -189,16 +189,25 @@
               <li>JPA</li>
               <li>MyBatis</li>
               <li>SSE (Server-Sent Events)</li>
-              <li>AWS EC2</li>
-            </ul>
-
+              <li>AWS EC2 (배포 환경)</li>            </ul>
+            <br />
             <h4 class="project-subtitle">Role</h4>
             <ul class="project-role">
               <li>Notification Domain 설계 및 구현 (SSE 기반 실시간 알림)</li>
               <li>Statistics Domain 설계 및 월별 통계 데이터 생성 기능 구현</li>
               <li>CQRS 구조를 적용한 Product 조회 기능 구현 (JPA / MyBatis 분리)</li>
             </ul>
-
+            <br />
+            <h4 class="project-subtitle">Key Backend Features</h4>
+            <ul class="project-role">
+            <li>자재 목록 및 자재 상세 조회 API 구현</li>
+            <li>완료된 주문 요청 건수 조회 기능 구현</li>
+            <li>진행 중인 주문 및 반품 결재 요청 건수 조회 기능 구현</li>
+            <li>가맹점주가 자신의 가맹점 통계를 조회하는 기능 구현</li>
+            <li>납품서 조회, 납품 확정일 등록, 납품서 수정 기능 구현</li>
+            <li>관리자 권한으로 통계 데이터 등록/수정/삭제 기능 구현</li>
+            </ul>
+            <br />
             <h4 class="project-subtitle">Real-time Notification System (SSE)</h4>
             <p class="body-text">
               주문 및 결제 프로세스에서 발생하는 이벤트를 사용자에게 실시간으로 전달하기 위해<br />
@@ -207,8 +216,11 @@
             <ul class="project-role">
               <li>가맹점 → 본사 주문 요청 시 알림 전송</li>
               <li>본사 → 주문 상태 변경 시 알림 전송</li>
+              <li>결재 반려 시 기안자에게 알림 전송 기능 구현</li>
+              <li>알림 클릭 시 관련 페이지로 redirect 기능 구현</li>
+              <li>읽은 알림 자동 삭제 기능 구현 (Scheduler)</li>
             </ul>
-
+            <br />
             <h4 class="project-subtitle">Notification Architecture</h4>
             <p class="body-text">
               비즈니스 로직에서 알림 이벤트가 발생하면 Notification Service가 알림을 생성하고<br />
@@ -223,13 +235,20 @@
                 SSE 기반 실시간 알림 아키텍처
               </figcaption>
             </figure>
-
+            <br />
+            <h4 class="project-subtitle">Notification Cache Management</h4>
+            <p class="body-text">
+            알림 조회 성능을 개선하기 위해 Event Cache를 활용하여 알림 데이터를 관리했습니다.<br />
+            알림 삭제 시 캐시 데이터도 함께 제거되도록 로직을 수정하여
+            캐시와 DB 간 데이터 불일치 문제가 발생하지 않도록 개선했습니다.
+            </p>
+            <br />
             <h4 class="project-subtitle">CQRS 구조</h4>
             <p class="body-text">
               읽기와 쓰기 로직을 분리하기 위해 CQRS(Command Query Responsibility Segregation) 구조를 적용했습니다.<br />
               Command는 JPA로, Query는 MyBatis로 구현하여 역할을 명확히 나눴습니다.
             </p>
-
+            <br />
             <h4 class="project-subtitle">Statistics Domain</h4>
             <p class="body-text">
               서비스 운영을 위한 통계 데이터를 제공하기 위해 Statistics 도메인을 설계하고 구현했습니다.<br />
@@ -254,6 +273,10 @@
               새로운 통계 유형이 추가되더라도 쉽게 확장할 수 있도록 구현했습니다.
             </p>
             <br />
+            <a href="/assets/FRANS.pdf" target="_blank" class="project-link external">
+              프로젝트 상세 PDF 열기
+            </a>
+            &nbsp;·&nbsp;
             <a href="https://github.com/x1-company/be14-fin-frans-be" target="_blank" class="project-link external">
               GitHub Repository 열기
             </a>
@@ -263,7 +286,7 @@
         <article class="project-card">
           <header class="project-header">
             <div>
-              <h3>Groo – 커뮤니티 기반 콘텐츠 서비스</h3>
+              <h3>Groo – AI 기반 감정 분석 일기 서비스</h3>
               <p class="project-tech">Spring Boot / MyBatis / Redis / Vue.js</p>
             </div>
             <button type="button" class="project-toggle" data-target="groo-detail">
@@ -273,9 +296,18 @@
 
           <div id="groo-detail" class="project-detail">
             <p class="body-text">
-              커뮤니티 기반으로 콘텐츠를 공유하고 소통하는 서비스를 개발했습니다.
+              사용자가 작성한 일기를 AI가 분석하여 감정을 추출하고,
+              그 감정을 기반으로 개인의 “감정의 숲”을 꾸밀 수 있는 커뮤니티 서비스입니다.<br /><br />
+            
+              사용자가 작성한 일기는 AI를 통해 총 7가지 감정으로 분석되며
+              감정 비율을 기반으로 상위 두 개의 감정을 추출합니다.<br />
+              가장 높은 비율의 감정은 해당 일기의 Main 감정이 되며
+              이를 기반으로 숲의 날씨와 분위기가 UI에 반영됩니다.<br /><br />
+            
+              사용자는 일기를 작성하면 “기억의 조각” 아이템을 획득하고
+              이를 감정의 숲에 배치하여 자신만의 숲을 꾸밀 수 있습니다.
             </p>
-
+            <br />
             <h4 class="project-subtitle">Tech Stack</h4>
             <ul class="project-role">
               <li>Spring Boot</li>
@@ -283,18 +315,49 @@
               <li>Redis</li>
               <li>Vue.js</li>
             </ul>
-
+            <br />
             <h4 class="project-subtitle">Role</h4>
             <ul class="project-role">
-              <li>MyBatis 기반 조회 기능 구현</li>
-              <li>Frontend UI 개발</li>
-              <li>Redis 기반 이미지 저장 구조 활용</li>
+              <li>서비스 아이디어 제안 및 AI 감정 분석 기능 설계</li>
+              <li>MyBatis 기반 주요 조회 API 개발</li>
+              <li>사용자별 / 카테고리별 아이템 조회 기능 구현</li>
+              <li>방명록 리스트 조회 및 상세 조회 기능 구현 (Public 사용자 접근 허용)</li>
+              <li>감정의 숲 상세 조회 API 구현 (Collection 응답 구조)</li>
+              <li>숲 생성 API 및 숲 공개 여부 전환 API 구현 (PATCH)</li>
+              <li>감정 데이터를 기반으로 UI 날씨 상태 매핑 로직 구현</li>
             </ul>
-
-            <h4 class="project-subtitle">S3 활용 경험</h4>
+            <br />
+            <h4 class="project-subtitle">AI Emotion Analysis</h4>
             <p class="body-text">
-              이미지 파일 저장을 위해 AWS S3 기반 스토리지 구조를 활용했습니다.<br />
-              Postman을 통해 S3 업로드 API를 테스트하고 서비스에서 이미지 조회 기능을 검증했습니다.
+            사용자가 작성한 일기 데이터를 AI API로 전달하여 감정을 분석하도록 구현했습니다.<br /><br />
+
+            총 7가지 감정 기준으로 분석된 결과에서
+            감정 비율이 높은 상위 두 개의 감정을 추출하고
+            가장 높은 감정을 Main 감정으로 설정했습니다.<br /><br />
+
+            Main 감정은 UI에서 숲의 날씨 상태와 매핑되어
+            감정의 숲 배경 환경으로 표현되도록 설계했습니다.
+            </p>
+            <br />
+            <h4 class="project-subtitle">Emotion Forest System</h4>
+            <p class="body-text">
+            사용자는 일기 작성 후 “기억의 조각” 아이템을 획득하며
+            이를 감정의 숲에 배치하여 개인의 숲을 꾸밀 수 있도록 설계했습니다.<br /><br />
+
+            아이템 이미지는 AWS S3에 저장하고
+            API를 통해 클라이언트에서 조회할 수 있도록 구현했습니다.<br /><br />
+
+            감정의 숲 데이터는 사용자의 배치 정보를 기반으로 조회되며
+            UI에 필요한 컬럼들을 고려하여 MyBatis 기반 조회 API를 구현했습니다.
+            </p>
+            <br />
+            <h4 class="project-subtitle">S3 기반 아이템 이미지 관리</h4>
+            <p class="body-text">
+            감정의 숲을 꾸미기 위한 아이템 이미지 수백 개를 AWS S3에 저장하고
+            서비스에서 해당 이미지를 조회하도록 구현했습니다.<br /><br />
+
+            Postman을 활용하여 S3 업로드 API를 테스트하고
+            서비스에서 이미지 URL을 기반으로 아이템을 조회할 수 있도록 구성했습니다.
             </p>
             <br />
             <a href="https://github.com/x1-company/be14-4th-x1-GROO-BE.git" target="_blank" class="project-link external">

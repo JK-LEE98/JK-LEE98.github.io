@@ -3,6 +3,8 @@
   --panel-bg: #ffffff;
   --accent: #111827;       
   --accent-dark: #000000;
+  --primary-blue: #2563eb;
+  --primary-blue-hover: #1d4ed8;
   --text-main: #111827;
   --text-muted: #6b7280;
   --border-subtle: #e5e7eb;
@@ -207,8 +209,8 @@ body {
 
 .project-toggle {
   border: none;
-  background-color: rgba(0, 0, 0, 0.04);
-  color: var(--accent);
+  background-color: rgba(37, 99, 235, 0.10);
+  color: var(--primary-blue);
   font-size: 14px;
   padding: 6px 10px;
   border-radius: 999px;
@@ -217,7 +219,7 @@ body {
 }
 
 .project-toggle:hover {
-  background-color: rgba(0, 0, 0, 0.08);
+  background-color: rgba(37, 99, 235, 0.16);
 }
 
 .project-detail {
@@ -251,13 +253,14 @@ body {
 
 .project-link {
   font-size: 14px;
-  color: var(--accent-dark);
+  color: var(--primary-blue);
   text-decoration: none;
   font-weight: 600;
 }
 
 .project-link:hover {
   text-decoration: underline;
+  color: var(--primary-blue-hover);
 }
 
 .project-subtitle {
