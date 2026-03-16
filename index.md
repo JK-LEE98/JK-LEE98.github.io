@@ -13,8 +13,6 @@ SSE(Server-Sent Events)를 활용한 실시간 알림 시스템을 구현한 경
 <br><br>
 
 # Tech Stack
-
-
 ## Backend
 
 - Java
@@ -44,9 +42,7 @@ SSE(Server-Sent Events)를 활용한 실시간 알림 시스템을 구현한 경
 ---
 
 <br><br>
-
 # Projects
-
 
 ## 1. Frans
 
@@ -91,6 +87,8 @@ Spring Boot / MyBatis / Redis / Vue.js
 [Groo 프로젝트 자세히 보기](./projects/groo.md)
 
 <br><br>
+
+---
 
 # Technical Writing
 
