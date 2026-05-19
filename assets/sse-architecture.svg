@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="960" viewBox="0 0 820 960">
+  <defs>
+    <marker id="ag" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#9e9e9e"/>
+    </marker>
+    <marker id="ao" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#e89820"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="820" height="960" fill="#1c1c1e"/>
+
+  <!-- Title -->
+  <text x="410" y="46" text-anchor="middle"
+    font-family="Georgia, serif" font-size="26" font-weight="bold" fill="white">
+    Real-time Notification System
+  </text>
+  <text x="410" y="70" text-anchor="middle"
+    font-family="Arial, sans-serif" font-size="13" fill="#888">
+    SSE (Server-Sent Events) 기반 알림 아키텍처
+  </text>
+
+  <!-- Backend outer box -->
+  <rect x="25" y="83" width="770" height="720" rx="10"
+    fill="#252528" stroke="#404040" stroke-width="1.5"/>
+  <text x="48" y="106" font-family="Arial, sans-serif" font-size="13" fill="#707070">
+    Backend (Spring Boot)
+  </text>
+
+  <!-- Column divider -->
+  <line x1="410" y1="116" x2="410" y2="555"
+    stroke="#38383e" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- ============ LEFT: SSE 구독 흐름 ============ -->
+  <text x="205" y="130" text-anchor="middle"
+    font-family="Arial, sans-serif" font-size="12" fill="#666">
+    ① SSE 구독 흐름
+  </text>
+
+  <!-- Client -->
+  <rect x="88" y="136" width="234" height="40" rx="5" fill="#36363e"/>
+  <text x="205" y="152" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#ddd">Client</text>
+  <text x="205" y="169" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#777">
+    GET /api/notification/subscribe
+  </text>
+
+  <line x1="205" y1="176" x2="205" y2="203" stroke="#9e9e9e" stroke-width="1.5" marker-end="url(#ag)"/>
+
+  <!-- NotificationController -->
+  <rect x="88" y="205" width="234" height="34" rx="5" fill="#36363e"/>
+  <text x="205" y="227" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#ddd">
+    NotificationController
+  </text>
+
+  <line x1="205" y1="239" x2="205" y2="266" stroke="#9e9e9e" stroke-width="1.5" marker-end="url(#ag)"/>
+
+  <!-- NotificationService.subscribe() -->
+  <rect x="70" y="268" width="270" height="52" rx="5" fill="#36363e"/>
+  <text x="205" y="288" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#ddd">
+    NotificationService
+  </text>
+  <text x="205" y="306" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#888">
+    .subscribe() — SseEmitter 생성·저장
+  </text>
+
+  <!-- Dashed arrow → EmitterRepository -->
+  <line x1="205" y1="320" x2="205" y2="562"
+    stroke="#9e9e9e" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#ag)"/>
+  <text x="196" y="410" text-anchor="end" font-family="Arial, sans-serif" font-size="10" fill="#606060">
+    .save(emitterId, emitter)
+  </text>
+
+  <!-- ============ RIGHT: 알림 전송 흐름 ============ -->
+  <text x="610" y="130" text-anchor="middle"
+    font-family="Arial, sans-serif" font-size="12" fill="#666">
+    ② 알림 전송 흐름
+  </text>
+
+  <!-- Business Service -->
+  <rect x="488" y="136" width="244" height="42" rx="5" fill="#36363e"/>
+  <text x="610" y="153" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#ddd">
+    Business Service
+  </text>
+  <text x="610" y="171" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#777">
+    OrderService / ApprovalCommandService
+  </text>
+
+  <line x1="610" y1="178" x2="610" y2="205" stroke="#9e9e9e" stroke-width="1.5" marker-end="url(#ag)"/>
+
+  <!-- NotificationService.send() + @Transactional -->
+  <rect x="488" y="207" width="244" height="50" rx="5" fill="#36363e"/>
+  <text x="610" y="226" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#ddd">
+    NotificationService.send()
+  </text>
+  <rect x="505" y="236" width="106" height="16" rx="3" fill="#1b3829"/>
+  <text x="558" y="248" text-anchor="middle" font-family="Courier New, monospace" font-size="10" fill="#4caf50">
+    @Transactional
+  </text>
+
+  <line x1="610" y1="257" x2="610" y2="282" stroke="#9e9e9e" stroke-width="1.5" marker-end="url(#ag)"/>
+
+  <!-- NotificationRepository (DB) -->
+  <rect x="488" y="284" width="244" height="40" rx="5" fill="#36363e"/>
+  <text x="610" y="301" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#ddd">
+    NotificationRepository
+  </text>
+  <text x="610" y="317" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#777">
+    DB 저장 (알림 영속화)
+  </text>
+
+  <!-- Orange arrow + @Async -->
+  <line x1="610" y1="324" x2="610" y2="352" stroke="#e89820" stroke-width="2" marker-end="url(#ao)"/>
+  <rect x="624" y="330" width="58" height="17" rx="3" fill="#5c3800"/>
+  <text x="653" y="342" text-anchor="middle" font-family="Courier New, monospace" font-size="10" font-weight="bold" fill="#e89820">
+    @Async
+  </text>
+
+  <!-- sendSseNotificationAsync() — orange border (key insight) -->
+  <rect x="470" y="354" width="280" height="58" rx="5" fill="#36363e" stroke="#e89820" stroke-width="1.2"/>
+  <text x="610" y="373" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#ddd">
+    sendSseNotificationAsync()
+  </text>
+  <text x="610" y="391" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#888">
+    별도 스레드 — 트랜잭션 커밋 후 실행
+  </text>
+  <text x="610" y="406" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#888">
+    new HashMap&lt;&gt;(emitters) — CME 방지
+  </text>
+
+  <!-- Orange dashed arrow → EmitterRepository -->
+  <line x1="610" y1="412" x2="610" y2="562"
+    stroke="#e89820" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#ao)"/>
+  <text x="622" y="482" font-family="Arial, sans-serif" font-size="10" fill="#b07820">
+    findAllEmitterStartWithByUserId()
+  </text>
+  <text x="622" y="496" font-family="Arial, sans-serif" font-size="10" fill="#b07820">
+    + saveEventCache(key, notification)
+  </text>
+
+  <!-- ============ EmitterRepository ============ -->
+  <rect x="45" y="566" width="730" height="125" rx="8"
+    fill="#2a2a34" stroke="#e89820" stroke-width="1.5"/>
+  <text x="58" y="589" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#e89820">
+    EmitterRepository
+  </text>
+
+  <!-- emitters map -->
+  <rect x="60" y="597" width="335" height="78" rx="5" fill="#36363e"/>
+  <text x="227" y="616" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#ddd">
+    ConcurrentHashMap&lt;String, SseEmitter&gt;
+  </text>
+  <text x="227" y="633" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#888">
+    emitters — 사용자별 SSE 연결 관리
+  </text>
+  <text x="227" y="650" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">
+    key: "{userId}_{UUID}"
+  </text>
+  <text x="227" y="666" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">
+    onCompletion / onTimeout → 자동 제거
+  </text>
+
+  <!-- eventCache map -->
+  <rect x="410" y="597" width="355" height="78" rx="5" fill="#36363e"/>
+  <text x="587" y="616" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#ddd">
+    ConcurrentHashMap&lt;String, Object&gt;
+  </text>
+  <text x="587" y="633" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#888">
+    eventCache — 알림 유실 방지
+  </text>
+  <text x="587" y="650" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">
+    Last-Event-ID 기반 미수신 이벤트 재전송
+  </text>
+  <text x="587" y="666" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">
+    삭제 시 cache도 함께 제거 (불일치 방지)
+  </text>
+
+  <!-- Arrow: EmitterRepository → Client (crosses backend boundary at y=803) -->
+  <line x1="410" y1="691" x2="410" y2="852"
+    stroke="#9e9e9e" stroke-width="1.5" marker-end="url(#ag)"/>
+  <text x="422" y="730" font-family="Arial, sans-serif" font-size="10" fill="#888">
+    SseEmitter.send()
+  </text>
+  <text x="422" y="815" font-family="Arial, sans-serif" font-size="10" fill="#888">
+    SSE 이벤트 푸시
+  </text>
+
+  <!-- ============ CLIENT (outside backend box) ============ -->
+  <rect x="185" y="855" width="450" height="78" rx="8"
+    fill="#2a2a34" stroke="#555" stroke-width="1.5"/>
+  <text x="410" y="880" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#ddd">
+    Client (Web Browser)
+  </text>
+  <text x="410" y="900" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#888">
+    • SSE 연결 수립 및 유지 (EventSource API)
+  </text>
+  <text x="410" y="918" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#888">
+    • 실시간 알림 수신 / 화면 표시
+  </text>
+</svg>
