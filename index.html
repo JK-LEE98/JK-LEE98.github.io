@@ -349,75 +349,6 @@
           </div>
         </article>
 
-        <article class="project-card">
-          <header class="project-header">
-            <div>
-              <h3>Groo – AI 기반 감정 분석 일기 서비스</h3>
-              <p class="project-tech">Spring Boot / MyBatis / JPA</p>
-            </div>
-            <button type="button" class="project-toggle" data-target="groo-detail">
-              프로젝트 상세 보기
-            </button>
-          </header>
-
-          <div id="groo-detail" class="project-detail">
-            <p class="body-text">
-              사용자가 작성한 일기를 AI가 분석하여 감정을 추출하고,
-              그 감정을 기반으로 개인의 “감정의 숲”을 꾸밀 수 있는 커뮤니티 서비스입니다.<br /><br />
-            
-              사용자가 작성한 일기는 AI를 통해 총 7가지 감정으로 분석되며
-              감정 비율을 기반으로 상위 두 개의 감정을 추출합니다.<br />
-              가장 높은 비율의 감정은 해당 일기의 Main 감정이 되며
-              이를 기반으로 숲의 날씨와 분위기가 UI에 반영됩니다.<br /><br />
-            
-              사용자는 일기를 작성하면 “기억의 조각” 아이템을 획득하고
-              이를 감정의 숲에 배치하여 자신만의 숲을 꾸밀 수 있습니다.
-            </p>
-            <br />
-            <h4 class="project-subtitle">Tech Stack</h4>
-            <ul class="project-role">
-              <li>Spring Boot</li>
-              <li>MyBatis</li>
-              <li>JPA</li>
-            </ul>
-            <br />
-            <h4 class="project-subtitle">Role</h4>
-            <ul class="project-role">
-              <li>서비스 아이디어 제안 및 AI 감정 분석 기능 설계</li>
-              <li>MyBatis 기반 주요 조회 API 개발</li>
-              <li>사용자별 / 카테고리별 아이템 조회 기능 구현</li>
-              <li>방명록 리스트 조회 및 상세 조회 기능 구현 (Public 사용자 접근 허용)</li>
-              <li>감정의 숲 상세 조회 API 구현 (Collection 응답 구조)</li>
-              <li>숲 생성 API 및 숲 공개 여부 전환 API 구현 (PATCH)</li>
-              <li>감정 데이터를 기반으로 UI 날씨 상태 매핑 로직 구현</li>
-            </ul>
-            <br />
-            <h4 class="project-subtitle">AI Emotion Analysis</h4>
-            <p class="body-text">
-            사용자가 작성한 일기 데이터를 AI API로 전달하여 감정을 분석하도록 구현했습니다.<br /><br />
-
-            총 7가지 감정 기준으로 분석된 결과에서
-            감정 비율이 높은 상위 두 개의 감정을 추출하고
-            가장 높은 감정을 Main 감정으로 설정했습니다.<br /><br />
-            </p>
-            <br />
-            <h4 class="project-subtitle">Emotion Forest System</h4>
-            <p class="body-text">
-            사용자는 일기 작성 후 “기억의 조각” 아이템을 획득하며
-            이를 감정의 숲에 배치하여 개인의 숲을 꾸밀 수 있도록 설계했습니다.<br /><br />
-
-            아이템 이미지는 AWS S3에 저장하고
-            API를 통해 클라이언트에서 조회할 수 있도록 구현했습니다.<br /><br />
-
-            감정의 숲 데이터는 사용자의 배치 정보를 기반으로 조회되며
-            UI에 필요한 컬럼들을 고려하여 MyBatis 기반 조회 API를 구현했습니다.
-            </p>
-            <br />
-            <a href="https://github.com/x1-company/be14-4th-x1-GROO-BE.git" target="_blank" class="project-link external">
-              GitHub Repository 열기
-            </a>
-          </div>
-        </article>
       </section>
 
       <section id="troubleshooting" class="section">
@@ -560,7 +491,7 @@
           <header class="project-header">
             <div>
               <h3>이메일 클라이언트 prefetch로 인한 보안 토큰 소모 문제 해결</h3>
-              <p class="project-tech">Spring Boot / Security / Redis</p>
+              <p class="project-tech">Spring Boot / Spring Security / Redis</p>
             </div>
             <button type="button" class="project-toggle" data-target="email-prefetch-troubleshooting-detail">
               내용 상세 보기
