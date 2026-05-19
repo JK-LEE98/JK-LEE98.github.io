@@ -552,7 +552,7 @@
               Redis가 완전히 다운된 상태에서 인증이 필요한 API를 호출하면<br />
               Circuit Breaker가 OPEN 상태임에도 불구하고 간헐적으로 503 에러가 반환되는 현상이 발생했습니다.<br />
               <br />
-              특히 CB가 OPEN에서 HALF-OPEN으로 전환될 때마다 20초 주기로 503이 반복되는 패턴이 확인됐습니다.
+              특히 CB가 OPEN에서 HALF-OPEN으로 전환될 때마다 30초 주기로 503이 반복되는 패턴이 확인됐습니다.
             </p>
 
             <h4 class="project-subtitle">원인 분석</h4>
