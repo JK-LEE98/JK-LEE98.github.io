@@ -205,7 +205,7 @@
             <h4 class="project-subtitle">Role</h4>
             <ul class="project-role">
               <li>API Gateway — WebFlux 기반 JWT 인증 필터, Whitelist/RBAC 정책 관리, IP 헤더 인젝션 차단, Redis Circuit Breaker 설계 및 구현</li>
-              <li>User Service — 일반/OAuth2 로그인, 토큰 탈취 대응 보안 흐름 설계 및 구현, 모니터링 기반 성능 개선</li>
+              <li>User Service — 일반/OAuth2 로그인, 토큰 탈취 대응 보안 흐름 설계 및 구현, 모니터링 기반 DB 커넥션 최적화</li>
               <li>Product Service — S3 Presigned URL 파일 업로드 설계 및 서버 측 검증 구현</li>
             </ul>
             <br />
@@ -234,16 +234,6 @@
               <li>Gmail 등 이메일 클라이언트의 링크 prefetch로 one-time 토큰이 소모되는 문제 해결 — GET은 확인 페이지로 redirect, POST에서만 실제 처리</li>
               <li>OAuth2 로그인에서도 동일한 토큰 탈취 대응 흐름 적용</li>
             </ul>
-            <br />
-
-            <h4 class="project-subtitle">User Service — 모니터링 기반 DB 커넥션 최적화</h4>
-            <p class="body-text">
-              모니터링 중 로그인 요청이 집중될 때 DB 커넥션이 고갈되는 현상을 발견했습니다.<br />
-              원인은 BCrypt 연산(수백ms)이 트랜잭션 안에서 실행되어 그 시간만큼 DB 커넥션을 점유하고 있었기 때문입니다.<br />
-              <br />
-              login()에 Propagation.NOT_SUPPORTED를 적용해 BCrypt 연산 구간을 트랜잭션 밖으로 꺼내고,<br />
-              DB write는 별도 LoginWriter 빈을 통해 독립 트랜잭션으로 처리하여 커넥션 점유 시간을 최소화했습니다.
-            </p>
             <br />
 
             <h4 class="project-subtitle">Product Service — S3 Presigned URL 파일 업로드</h4>
