@@ -60,7 +60,7 @@
             <span class="skill-label">Java</span>
           </div>
           <div class="skill-item">
-            <span class="skill-icon">&lt;/&gt;</span>
+            <span class="skill-icon">&lt;/&gt;</span> 
             <span class="skill-label">Spring Boot</span>
           </div>
           <div class="skill-item">
@@ -158,6 +158,106 @@
 
       <section id="portfolio" class="section">
         <h2 class="section-title">Portfolio</h2>
+
+        <article class="project-card">
+          <header class="project-header">
+            <div>
+              <h3>잡아클래스(JabaClass) – 원데이 클래스 중개 플랫폼</h3>
+              <p class="project-tech">Spring Cloud Gateway / Spring Boot / OAuth2 / Redis / Kafka / Elasticsearch / AWS S3 / k3s</p>
+            </div>
+            <button type="button" class="project-toggle" data-target="jabaclass-detail">
+              프로젝트 상세 보기
+            </button>
+          </header>
+
+          <div id="jabaclass-detail" class="project-detail">
+            <p class="body-text">
+              강사와 수강생을 연결하는 원데이 클래스 중개 플랫폼입니다.<br />
+              연예인·셀럽이 주최하는 클래스 특성상 특정 시점에 트래픽이 집중되는 환경을 전제로,<br />
+              고가용성과 장애 격리를 목표로 MSA 구조를 채택했습니다.<br />
+              <br />
+              API Gateway가 인증·인가를 중앙에서 처리하고,<br />
+              각 서비스는 Kafka로 비동기 통신하며 독립적으로 배포됩니다.<br />
+              상품 검색에는 Elasticsearch를, 파일 업로드에는 S3 Presigned URL을 활용했으며<br />
+              k3s 환경에 배포되어 운영됩니다.
+            </p>
+            <br />
+
+            <h4 class="project-subtitle">Tech Stack</h4>
+            <ul class="project-role">
+              <li>Spring Cloud Gateway (WebFlux)</li>
+              <li>Spring Boot / Spring Security / JPA</li>
+              <li>OAuth2 (소셜 로그인)</li>
+              <li>Redis / PostgreSQL</li>
+              <li>Kafka / Elasticsearch</li>
+              <li>AWS S3 (Presigned URL)</li>
+              <li>Resilience4j (Circuit Breaker)</li>
+              <li>k3s (배포 환경)</li>
+            </ul>
+            <br />
+
+            <h4 class="project-subtitle">Role</h4>
+            <ul class="project-role">
+              <li>API Gateway — WebFlux 기반 JWT 인증 필터, Whitelist/RBAC 정책 관리, IP 헤더 인젝션 차단, Redis Circuit Breaker 설계 및 구현</li>
+              <li>User Service — 일반/OAuth2 로그인, 토큰 탈취 대응 보안 흐름 설계 및 구현, 모니터링 기반 성능 개선</li>
+              <li>Product Service — S3 Presigned URL 파일 업로드 설계 및 서버 측 검증 구현</li>
+            </ul>
+            <br />
+
+            <h4 class="project-subtitle">API Gateway — 중앙집중 인증</h4>
+            <p class="body-text">
+              각 서비스가 개별적으로 JWT를 검증하던 구조에서 Gateway가 인증을 단일 처리하도록 전환했습니다.<br />
+              검증된 사용자 정보는 X-User-Id 헤더로 하위 서비스에 전달하고,<br />
+              하위 서비스는 별도 인증 없이 헤더만 신뢰합니다.
+            </p>
+            <ul class="project-role">
+              <li>WebFlux 기반 JWT 인증 필터 구현 (Spring Cloud Gateway)</li>
+              <li>Whitelist/RBAC 정책을 YAML 파일로 관리 — k3s ConfigMap으로 마운트해 이미지 재빌드 없이 정책 변경 가능</li>
+              <li>IpForwardingFilter(@Order(-2)) — X-Real-IP, X-Forwarded-For 헤더 위조 차단, 실제 TCP IP로 강제 덮어씌움</li>
+              <li>Redis Circuit Breaker + User Service fallback — Redis 장애 시에도 Gateway 인증 503 완전 제거</li>
+            </ul>
+            <br />
+
+            <h4 class="project-subtitle">User Service — 토큰 탈취 대응</h4>
+            <p class="body-text">
+              JWT 기반 인증에서 발생할 수 있는 토큰 탈취 시나리오에 대응하기 위한 보안 흐름을 설계했습니다.
+            </p>
+            <ul class="project-role">
+              <li>RTR(Refresh Token Rotation) — Refresh Token 재사용 감지 시 해당 계정 전체 강제 로그아웃</li>
+              <li>새 기기 로그인 감지 시 보안 알림 이메일 발송 및 one-click 강제 로그아웃 링크 제공</li>
+              <li>Gmail 등 이메일 클라이언트의 링크 prefetch로 one-time 토큰이 소모되는 문제 해결 — GET은 확인 페이지로 redirect, POST에서만 실제 처리</li>
+              <li>OAuth2 로그인에서도 동일한 토큰 탈취 대응 흐름 적용</li>
+            </ul>
+            <br />
+
+            <h4 class="project-subtitle">User Service — 모니터링 기반 DB 커넥션 최적화</h4>
+            <p class="body-text">
+              모니터링 중 로그인 요청이 집중될 때 DB 커넥션이 고갈되는 현상을 발견했습니다.<br />
+              원인은 BCrypt 연산(수백ms)이 트랜잭션 안에서 실행되어 그 시간만큼 DB 커넥션을 점유하고 있었기 때문입니다.<br />
+              <br />
+              login()에 Propagation.NOT_SUPPORTED를 적용해 BCrypt 연산 구간을 트랜잭션 밖으로 꺼내고,<br />
+              DB write는 별도 LoginWriter 빈을 통해 독립 트랜잭션으로 처리하여 커넥션 점유 시간을 최소화했습니다.
+            </p>
+            <br />
+
+            <h4 class="project-subtitle">Product Service — S3 Presigned URL 파일 업로드</h4>
+            <p class="body-text">
+              이미지를 서버를 통해 전송하면 서버 메모리·트래픽 부담이 커지므로<br />
+              클라이언트가 S3에 직접 업로드하는 Presigned URL 방식을 채택했습니다.
+            </p>
+            <ul class="project-role">
+              <li>Presigned PUT URL 서명에 contentType 포함 — 서명된 타입과 다른 업로드는 S3가 자체 거부</li>
+              <li>업로드 완료 후 headObject로 size·contentType 서버 검증 — 파일 다운로드 없이 메타데이터만 조회</li>
+              <li>검증 실패 시 @TransactionalEventListener(AFTER_COMMIT)로 S3 삭제 — DB 커밋 전 삭제 시 발생하는 데이터 불일치 방지</li>
+              <li>validateAndConfirm()에 REQUIRES_NEW 적용 — 상품 등록 트랜잭션과 파일 검증 트랜잭션 격리</li>
+            </ul>
+            <br />
+
+            <a href="https://github.com/prgrms-be-adv-devcourse/beadv5_5_ChamomileChicken_BE" target="_blank" class="project-link external">
+              GitHub Repository 열기
+            </a>
+          </div>
+        </article>
 
         <article class="project-card">
           <header class="project-header">
