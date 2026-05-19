@@ -474,7 +474,7 @@
           <header class="project-header">
             <div>
               <h3>SSE 실시간 알림 Production 환경 문제 해결</h3>
-              <p class="project-tech">Spring Boot / SSE / Concurrency / Notification</p>
+              <p class="project-tech">Spring Boot / SSE / Transaction / Async / Nginx</p>
             </div>
             <button type="button" class="project-toggle" data-target="sse-troubleshooting-detail">
               내용 상세 보기
@@ -485,28 +485,36 @@
             <h4 class="project-subtitle">문제 상황</h4>
             <p class="body-text">
               프랜차이즈 주문 및 결제 관리 서비스에서 SSE 기반 실시간 알림을 운영 환경에 배포했을 때,<br />
-              연결은 유지되지만 이벤트 push가 바로 전달되지 않고 새로고침 후에야 도착하는 문제가 발생했습니다.
+              연결은 유지되지만 이벤트가 즉시 전달되지 않고 새로고침 이후에야 알림이 수신되는 문제가 발생했습니다.
             </p>
 
             <h4 class="project-subtitle">원인 분석</h4>
+            <p class="body-text">
+              로컬 환경에서는 정상 동작했기 때문에 처음에는 ConcurrentModificationException,
+              끊어진 emitter 관리 등을 원인으로 의심했습니다.<br />
+              그러나 이를 개선해도 문제가 재현되어 코드 구조를 더 깊이 분석했습니다.<br />
+              <br />
+              진짜 원인은 <strong>@Transactional 안에서 SSE 이벤트 전송이 동기로 실행</strong>되는 구조였습니다.
+            </p>
             <ul class="project-role">
-              <li>Emitter Map 순회 중 emitter 삭제가 일어나면서 ConcurrentModificationException이 발생할 수 있는 구조</li>
-              <li>끊어진 SSE 연결이 Repository에 남아 있어 실제로는 죽은 emitter로 이벤트 전송을 시도하는 문제</li>
-              <li>Event Cache 삭제 시에도 Map 순회와 삭제가 동시에 일어날 수 있는 동시성 문제</li>
+              <li>send() 메서드가 @Transactional로 감싸진 상태에서 DB 저장 후 바로 emitter.send() 호출</li>
+              <li>트랜잭션이 열린 채로 SSE 이벤트 전송이 시도됨 — 트랜잭션 커밋 전에는 응답이 flush되지 않는 상태</li>
+              <li>로컬 환경(직접 연결)에서는 문제가 드러나지 않았지만 prod 환경(nginx 프록시 경유)에서는 응답이 버퍼링되어 커밋 전까지 클라이언트에 도달하지 못함</li>
             </ul>
 
             <h4 class="project-subtitle">해결 방법</h4>
             <ul class="project-role">
-              <li>Emitter Map을 직접 순회하지 않고, 복사본(Map copy)을 만들어 순회하도록 구조 변경</li>
-              <li>이벤트 전송 중 IOException 발생 시 해당 emitter를 즉시 제거하여 끊어진 연결 정리</li>
-              <li>Event Cache 삭제 시 먼저 삭제 대상 key 목록을 수집한 뒤, 별도 단계에서 일괄 삭제하도록 로직 분리</li>
+              <li>SSE 이벤트 전송 로직을 별도 메서드 sendSseNotificationAsync()로 분리</li>
+              <li>@Async 적용 — 트랜잭션 커밋 후 별도 스레드에서 SSE push 실행</li>
+              <li>send()는 DB 저장만 담당하도록 책임 분리, SSE 전송은 트랜잭션 완료 이후에 처리</li>
+              <li>emitter 순회 시 복사본(HashMap copy) 사용 및 IOException 발생 시 해당 emitter 즉시 제거</li>
             </ul>
 
             <h4 class="project-subtitle">결과 및 인사이트</h4>
             <ul class="project-role">
-              <li>Production 환경에서도 알림 이벤트 발생 시 클라이언트가 즉시 실시간 알림을 수신</li>
-              <li>SSE 연결 안정성 향상 및 끊어진 emitter 자동 정리</li>
-              <li>컬렉션 순회 중 수정에서 발생할 수 있는 동시성 문제를 실전에서 경험하고 해결</li>
+              <li>Production 환경에서도 알림 이벤트 발생 즉시 클라이언트가 실시간으로 수신</li>
+              <li>로컬과 prod 환경의 동작 차이를 통해 @Transactional 범위 안에서 I/O 작업(SSE, 외부 호출 등)을 동기로 처리할 경우 예상치 못한 타이밍 문제가 생길 수 있음을 확인</li>
+              <li>문제를 표면(동시성 버그)에서만 보지 않고 트랜잭션 범위와 스레드 실행 흐름까지 추적해 근본 원인을 찾는 디버깅 경험</li>
             </ul>
           </div>
         </article>
