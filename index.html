@@ -510,6 +510,134 @@
             </ul>
           </div>
         </article>
+
+        <article class="project-card">
+          <header class="project-header">
+            <div>
+              <h3>BCrypt 연산으로 인한 DB 커넥션 고갈 문제 해결</h3>
+              <p class="project-tech">Spring Boot / Transaction / HikariCP / Monitoring</p>
+            </div>
+            <button type="button" class="project-toggle" data-target="bcrypt-troubleshooting-detail">
+              내용 상세 보기
+            </button>
+          </header>
+
+          <div id="bcrypt-troubleshooting-detail" class="project-detail">
+            <h4 class="project-subtitle">문제 상황</h4>
+            <p class="body-text">
+              잡아클래스 운영 중 모니터링을 통해 로그인 요청이 집중될 때<br />
+              DB 커넥션 풀이 고갈되어 다른 API 요청까지 대기 상태가 되는 현상을 발견했습니다.
+            </p>
+
+            <h4 class="project-subtitle">원인 분석</h4>
+            <ul class="project-role">
+              <li>login() 메서드 전체가 @Transactional로 감싸진 상태에서 BCrypt 해시 검증(수백ms)이 트랜잭션 안에서 실행되고 있었음</li>
+              <li>BCrypt 연산이 진행되는 동안 DB 커넥션이 점유 상태로 유지됨</li>
+              <li>동시 로그인 요청이 증가하면 커넥션 풀(기본 10개)이 BCrypt 대기 요청으로 꽉 차버리는 구조</li>
+            </ul>
+
+            <h4 class="project-subtitle">해결 방법</h4>
+            <ul class="project-role">
+              <li>login()에 Propagation.NOT_SUPPORTED 적용 — BCrypt 연산 구간에서 트랜잭션을 보류시켜 DB 커넥션 점유 차단</li>
+              <li>DB write 로직을 별도 LoginWriter 빈으로 분리 — 프록시 트랜잭션으로 독립 실행되도록 구조 변경</li>
+              <li>self-invocation으로 트랜잭션이 적용되지 않던 내부 메서드 호출 제거 후 각 메서드에 인라인 처리</li>
+            </ul>
+
+            <h4 class="project-subtitle">결과 및 인사이트</h4>
+            <ul class="project-role">
+              <li>로그인 집중 구간에서 DB 커넥션 고갈 현상 해소</li>
+              <li>@Transactional 범위가 외부 연산(BCrypt, 네트워크 등)을 포함할 경우 커넥션 점유 시간이 늘어날 수 있다는 것을 실전에서 확인</li>
+              <li>단순히 커넥션 수를 늘리는 것이 아니라 커넥션 점유 시간 자체를 줄이는 방향으로 문제를 접근</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <header class="project-header">
+            <div>
+              <h3>Redis Circuit Breaker fallback 버그로 인한 간헐적 503 문제 해결</h3>
+              <p class="project-tech">Spring Cloud Gateway / Resilience4j / Circuit Breaker / Redis</p>
+            </div>
+            <button type="button" class="project-toggle" data-target="redis-cb-troubleshooting-detail">
+              내용 상세 보기
+            </button>
+          </header>
+
+          <div id="redis-cb-troubleshooting-detail" class="project-detail">
+            <h4 class="project-subtitle">문제 상황</h4>
+            <p class="body-text">
+              Redis가 완전히 다운된 상태에서 인증이 필요한 API를 호출하면<br />
+              Circuit Breaker가 OPEN 상태임에도 불구하고 간헐적으로 503 에러가 반환되는 현상이 발생했습니다.<br />
+              <br />
+              특히 CB가 OPEN에서 HALF-OPEN으로 전환될 때마다 20초 주기로 503이 반복되는 패턴이 확인됐습니다.
+            </p>
+
+            <h4 class="project-subtitle">원인 분석</h4>
+            <ul class="project-role">
+              <li>fallback lambda에서 예외 유형을 두 가지로 다르게 처리하고 있었음</li>
+              <li>CB OPEN 상태(CallNotPermittedException) → RedisCircuitOpenException → User Service fallback → 정상 응답</li>
+              <li>Redis 실제 오류(첫 요청, HALF-OPEN probe) → RedisBlacklistException → AUTH_SERVICE_UNAVAILABLE → 503</li>
+              <li>결과적으로 CB가 OPEN으로 전환되는 첫 요청과 HALF-OPEN probe 시점마다 503이 발생하는 구조</li>
+            </ul>
+
+            <h4 class="project-subtitle">해결 방법</h4>
+            <ul class="project-role">
+              <li>fallback lambda를 통일하여 Redis 오류 유형에 무관하게 모두 RedisCircuitOpenException으로 처리</li>
+              <li>Redis 실제 오류와 CB OPEN 상태를 구분할 필요가 없는 이유 — 둘 다 Redis를 신뢰할 수 없는 상황이므로 동일하게 User Service fallback으로 처리하면 됨</li>
+            </ul>
+
+            <h4 class="project-subtitle">결과 및 인사이트</h4>
+            <ul class="project-role">
+              <li>Redis 완전 다운 상태에서도 Gateway 인증 503 완전 제거</li>
+              <li>Circuit Breaker의 상태 전이(CLOSED → OPEN → HALF-OPEN) 흐름을 실전에서 디버깅하며 동작 방식을 정확히 이해</li>
+              <li>fallback 처리 시 예외 유형을 과도하게 세분화하면 오히려 예외 경로가 늘어나 버그를 유발할 수 있음을 확인</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <header class="project-header">
+            <div>
+              <h3>이메일 클라이언트 prefetch로 인한 보안 토큰 소모 문제 해결</h3>
+              <p class="project-tech">Spring Boot / Security / Redis / HTTP</p>
+            </div>
+            <button type="button" class="project-toggle" data-target="email-prefetch-troubleshooting-detail">
+              내용 상세 보기
+            </button>
+          </header>
+
+          <div id="email-prefetch-troubleshooting-detail" class="project-detail">
+            <h4 class="project-subtitle">문제 상황</h4>
+            <p class="body-text">
+              토큰 탈취 대응 기능으로 새 기기 로그인 감지 시 보안 이메일을 발송하고,<br />
+              이메일 내 링크를 클릭하면 강제 로그아웃(계정 보호)이 실행되도록 구현했습니다.<br />
+              <br />
+              그런데 실제 테스트에서 링크를 클릭하기 전에 이미 Redis의 one-time 토큰이 소모되어<br />
+              링크 클릭 시 401이 반환되는 문제가 발생했습니다.
+            </p>
+
+            <h4 class="project-subtitle">원인 분석</h4>
+            <ul class="project-role">
+              <li>Gmail 등 일부 이메일 클라이언트는 보안·미리보기 목적으로 이메일 내 링크를 자동으로 GET 요청(prefetch)함</li>
+              <li>강제 로그아웃 API가 GET 방식으로 구현되어 있었고, 이 prefetch 요청이 실제 처리를 실행해버림</li>
+              <li>Redis에 저장된 one-time 토큰이 사용자가 클릭하기 전에 소모되어 정작 사용자가 클릭했을 때 401 반환</li>
+            </ul>
+
+            <h4 class="project-subtitle">해결 방법</h4>
+            <ul class="project-role">
+              <li>GET /report-theft — 처리 없이 프론트엔드 확인 페이지로 redirect만 수행 (prefetch가 들어와도 토큰 소모 없음)</li>
+              <li>POST /report-theft — 사용자가 확인 페이지에서 명시적으로 버튼을 눌러야만 실제 강제 로그아웃 처리 실행</li>
+              <li>HTTP 메서드 의미론(GET은 안전한 조회, POST는 상태 변경)에 맞게 설계를 바로잡는 방향으로 해결</li>
+            </ul>
+
+            <h4 class="project-subtitle">결과 및 인사이트</h4>
+            <ul class="project-role">
+              <li>보안 이메일 링크 → 확인 페이지 → 강제 로그아웃 흐름이 정상적으로 동작</li>
+              <li>GET 요청은 멱등성과 안전성이 보장되어야 한다는 HTTP 원칙을 실전 버그로 체감</li>
+              <li>외부 클라이언트(이메일 앱, 크롤러 등)가 GET 링크를 자동으로 호출할 수 있다는 점을 보안 설계 시 고려해야 함</li>
+            </ul>
+          </div>
+        </article>
       </section>
 
       <section id="contact" class="section">
