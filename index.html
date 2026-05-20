@@ -658,7 +658,9 @@
           var targetId = btn.getAttribute("data-target");
           var detail = document.getElementById(targetId);
           var isOpen = detail.classList.toggle("open");
-          btn.textContent = isOpen ? "프로젝트 접기" : "프로젝트 상세 보기";
+          var label = btn.dataset.label || btn.textContent.trim();
+          if (!btn.dataset.label) btn.dataset.label = label;
+          btn.textContent = isOpen ? label.replace("상세 보기", "접기") : label;
         });
       });
 
