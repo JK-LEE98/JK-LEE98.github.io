@@ -539,6 +539,72 @@
             </ul>
           </div>
         </article>
+
+        <article class="project-card">
+          <header class="project-header">
+            <div>
+              <h3>API Gateway Whitelist/RBAC 정책 관리 방식 개선</h3>
+              <p class="project-tech">Spring Cloud Gateway / k3s ConfigMap / Flyway / Caffeine</p>
+            </div>
+            <button type="button" class="project-toggle" data-target="whitelist-rbac-detail">
+              내용 상세 보기
+            </button>
+          </header>
+
+          <div id="whitelist-rbac-detail" class="project-detail">
+            <h4 class="project-subtitle">문제 상황</h4>
+            <p class="body-text">
+              초기 설계에서는 Gateway 레벨의 RBAC가 존재하지 않았고,<br />
+              각 서비스가 JWT claims에서 role을 꺼내는 @CurrentUserRole을 통해 권한을 직접 검증했습니다.<br />
+              이후 팀 내 논의를 통해 Gateway에서 role을 검증하고 라우팅하는 방향으로 전환하면서<br />
+              Whitelist와 RBAC 정책을 Gateway 인증 필터에 하드코딩하게 되었습니다.<br />
+              <br />
+              그런데 API가 추가되거나 접근 권한이 변경될 때마다 Gateway 코드를 수정하고<br />
+              재빌드·재배포해야 하는 문제가 생겼습니다.<br />
+              MSA에서 모든 요청이 경유하는 Gateway는 재배포를 최소화해야 하는 컴포넌트인데,<br />
+              정책 변경이 곧 배포 이벤트를 강제하는 구조였습니다.
+            </p>
+
+            <h4 class="project-subtitle">원인 분석</h4>
+            <ul class="project-role">
+              <li>Whitelist와 RBAC 정책이 코드에 직접 선언되어 정책 변경과 배포가 강결합된 구조</li>
+              <li>JWT claims에서 role을 꺼내 판단하는 방식이어서, 사용자의 실제 역할이 변경되어도 토큰 만료 전까지 반영되지 않는 문제도 내재되어 있었음</li>
+            </ul>
+
+            <h4 class="project-subtitle">1차 시도 — Gateway 전용 DB + Flyway + Caffeine</h4>
+            <p class="body-text">
+              정책을 코드에서 분리하기 위해 Gateway 전용 DB를 두고<br />
+              Whitelist와 role-path 매핑을 테이블로 관리하는 방식을 도입했습니다.
+            </p>
+            <ul class="project-role">
+              <li>Whitelist 경로와 역할별 접근 가능 경로를 DB 테이블에 저장 — API 변경 시 DB 수정만으로 반영</li>
+              <li>Flyway 도입 — 정책 변경 이력을 마이그레이션 파일로 관리하여 환경별 일관성 유지</li>
+              <li>Caffeine 캐시 적용 — 매 요청마다 DB를 조회하는 성능 저하 방지</li>
+              <li><strong>한계 발견:</strong> DB 장애 발생 시 Gateway까지 장애가 전파되는 단일 장애 지점(SPOF) 문제 — Gateway 가용성이 DB 상태에 종속됨</li>
+            </ul>
+
+            <h4 class="project-subtitle">최종 해결 — k3s ConfigMap</h4>
+            <p class="body-text">
+              DB 의존성 없이 정책을 외부에서 관리할 수 있는 방법을 검토한 끝에<br />
+              k3s ConfigMap을 활용한 YAML 기반 정책 관리 방식을 선택했습니다.
+            </p>
+            <ul class="project-role">
+              <li>Whitelist와 RBAC 정책을 YAML 파일에 선언적으로 정의</li>
+              <li>dev 환경: classpath의 YAML을 직접 로드</li>
+              <li>prod 환경: k3s ConfigMap으로 YAML을 Pod에 볼륨 마운트</li>
+              <li>GitHub Actions workflow 구성 — <code>gateway-rules.yml</code> 변경 시 자동으로 ConfigMap을 업데이트하여 Gateway 재빌드 없이 정책 즉시 반영</li>
+              <li>DB 의존성 제거 — Gateway 가용성이 하위 서비스 장애에 영향받지 않는 구조</li>
+            </ul>
+
+            <h4 class="project-subtitle">결과 및 인사이트</h4>
+            <ul class="project-role">
+              <li>API 정책 변경 시 Gateway 재배포 제로화</li>
+              <li>Gateway가 외부 정책 파일 기준으로 RBAC를 처리하면서 JWT claims에서 role 제거 — 각 서비스의 @CurrentUserRole 전면 삭제, 인증·인가 책임이 Gateway로 완전히 집중됨</li>
+              <li>하드코딩 → DB+Caffeine 구현 → ConfigMap 전환: 직접 구현하고 장애 전파 가능성을 발견한 후에야 더 나은 방향을 찾을 수 있었음</li>
+              <li>정책(Policy)은 코드보다 변경 빈도가 높다 — 변경 빈도가 다른 관심사는 코드에서 분리해야 한다는 원칙을 실전에서 체득</li>
+            </ul>
+          </div>
+        </article>
       </section>
 
       <section id="contact" class="section">
