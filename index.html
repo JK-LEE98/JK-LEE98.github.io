@@ -426,9 +426,15 @@
           <div id="bcrypt-troubleshooting-detail" class="project-detail">
             <h4 class="project-subtitle">문제 상황</h4>
             <p class="body-text">
-              잡아클래스 운영 중 모니터링을 통해 로그인 요청이 집중될 때<br />
-              DB 커넥션 풀이 고갈되어 다른 API 요청까지 대기 상태가 되는 현상을 발견했습니다.
+              잡아클래스 운영 중 k6 부하 테스트(동시 40 VUs, 목표 20 req/s)와 Grafana 모니터링을 통해<br />
+              로그인 요청이 집중될 때 DB 커넥션 풀이 고갈되어 다른 API 요청까지 대기 상태가 되는 현상을 발견했습니다.
             </p>
+            <ul class="project-role">
+              <li>avg iteration duration: <strong>7.37초</strong></li>
+              <li>p99: <strong>11.75초</strong></li>
+              <li>dropped_iterations: <strong>223</strong> — 처리 한계를 넘어 요청이 버려지는 상태</li>
+              <li>경고: <code>Insufficient VUs, reached 40 active VUs</code></li>
+            </ul>
 
             <h4 class="project-subtitle">원인 분석</h4>
             <ul class="project-role">
@@ -437,17 +443,68 @@
               <li>동시 로그인 요청이 증가하면 커넥션 풀(기본 10개)이 BCrypt 대기 요청으로 꽉 차버리는 구조</li>
             </ul>
 
-            <h4 class="project-subtitle">해결 방법</h4>
+            <h4 class="project-subtitle">해결 과정</h4>
             <ul class="project-role">
-              <li>login()에 Propagation.NOT_SUPPORTED 적용 — BCrypt 연산 구간에서 트랜잭션을 보류시켜 DB 커넥션 점유 차단</li>
-              <li>DB write 로직을 별도 LoginWriter 빈으로 분리 — 프록시 트랜잭션으로 독립 실행되도록 구조 변경</li>
-              <li>self-invocation으로 트랜잭션이 적용되지 않던 내부 메서드 호출 제거 후 각 메서드에 인라인 처리</li>
+              <li><strong>1단계 — 트랜잭션 분리:</strong> login()에 Propagation.NOT_SUPPORTED 적용, DB write 로직을 LoginWriter 별도 빈으로 분리<br/>
+                BCrypt 연산 구간에서 트랜잭션을 보류시켜 커넥션 점유 차단, DB 커넥션 고갈 해소</li>
+              <li><strong>2단계 — BCrypt CF 9 시도 (추가 최적화):</strong> 트랜잭션 분리 후 BCrypt Cost Factor를 10 → 9로 낮추어 연산 속도를 더 높이려 했으나, <strong>실패율 76.66%, p99 16.93초로 오히려 악화</strong><br/>
+                연산이 빨라지자 요청이 더 빠르게 다음 단계로 쏟아지며 1 vCPU 환경에서 CPU 컨텍스트 스위칭이 새로운 병목으로 부상</li>
+              <li><strong>3단계 — BCrypt 10 롤백:</strong> 1 vCPU 환경에서 BCrypt 10의 의도적 연산 지연이 유입 속도를 자연스럽게 조절하는 throttle 역할을 함을 파악, Cost Factor를 10으로 복구</li>
             </ul>
+
+            <h4 class="project-subtitle">튜닝 과정</h4>
+            <div style="overflow-x:auto; margin: 10px 0 4px;">
+              <table style="width:100%; border-collapse:collapse; font-size:13px; color:#ccc;">
+                <thead>
+                  <tr style="border-bottom:1px solid #444;">
+                    <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">단계</th>
+                    <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">상태</th>
+                    <th style="text-align:center; padding:7px 12px; color:#888; font-weight:500;">VUs</th>
+                    <th style="text-align:right; padding:7px 12px; color:#888; font-weight:500;">성공률</th>
+                    <th style="text-align:right; padding:7px 12px; color:#888; font-weight:500;">p99</th>
+                    <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">핵심 발견</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid #2e2e2e;">
+                    <td style="padding:7px 12px; color:#e05555;">① 초기</td>
+                    <td style="padding:7px 12px;">기존 코드 (BCrypt 10, in @Transactional)</td>
+                    <td style="text-align:center; padding:7px 12px;">40</td>
+                    <td style="text-align:right; padding:7px 12px; color:#e05555;">97.6%</td>
+                    <td style="text-align:right; padding:7px 12px; color:#e05555;">11.75초</td>
+                    <td style="padding:7px 12px; color:#888;">dropped 223, DB 커넥션 고갈</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #2e2e2e;">
+                    <td style="padding:7px 12px; color:#e05555;">② BCrypt 9</td>
+                    <td style="padding:7px 12px;">트랜잭션 분리 + CF 9 추가 시도</td>
+                    <td style="text-align:center; padding:7px 12px;">30</td>
+                    <td style="text-align:right; padding:7px 12px; color:#e05555;">23.3%</td>
+                    <td style="text-align:right; padding:7px 12px; color:#e05555;">16.93초</td>
+                    <td style="padding:7px 12px; color:#888;">VU 줄였음에도 악화, CPU 병목으로 이동</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:7px 12px; color:#4caf50;">③ BCrypt 10 복구</td>
+                    <td style="padding:7px 12px;">트랜잭션 분리 유지 + CF 10 롤백</td>
+                    <td style="text-align:center; padding:7px 12px;">10</td>
+                    <td style="text-align:right; padding:7px 12px; color:#4caf50;">100%</td>
+                    <td style="text-align:right; padding:7px 12px; color:#4caf50;">417ms</td>
+                    <td style="padding:7px 12px; color:#888;">1 vCPU 안정 운영 범위</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="body-text" style="font-size:12px; color:#606060; margin-top:6px;">
+              ※ 각 단계의 VU 수가 다름 — 부하를 줄여가며 안정적으로 처리 가능한 범위를 탐색하는 과정이었음.<br />
+              Grafana에서 1 vCPU 환경의 Load Average 임계점을 확인한 후, VU를 높일수록 인프라 한계에 수렴함을 파악.
+            </p>
 
             <h4 class="project-subtitle">결과 및 인사이트</h4>
             <ul class="project-role">
-              <li>로그인 집중 구간에서 DB 커넥션 고갈 현상 해소</li>
-              <li>@Transactional 범위가 외부 연산(BCrypt, 네트워크 등)을 포함할 경우 커넥션 점유 시간이 늘어날 수 있다는 것을 실전에서 확인</li>
+              <li>트랜잭션 구조 개선으로 DB 커넥션 고갈 해소, BCrypt 10 유지 + 10 VUs 기준 <strong>성공률 100%, p99 417ms</strong> 안정 달성</li>
+              <li>BCrypt CF를 낮추면 빨라질 것이라는 예상과 달리 오히려 악화<br/>
+                  연산 속도가 빨라지자 요청이 동시에 쏟아지며 CPU 컨텍스트 스위칭이 새로운 병목으로 부상. BCrypt 10의 느린 연산이 1 vCPU 환경에서 자연스러운 유입 속도 조절 역할을 하고 있었음</li>
+              <li>Grafana Load Average 지표로 단일 코어 임계점을 수치로 확인<br/>
+                  코드 최적화만으로 해결되지 않는 인프라 수준의 한계를 데이터로 파악하는 경험</li>
               <li>단순히 커넥션 수를 늘리는 것이 아니라 커넥션 점유 시간 자체를 줄이는 방향으로 문제를 접근</li>
             </ul>
           </div>
@@ -490,6 +547,7 @@
             <h4 class="project-subtitle">결과 및 인사이트</h4>
             <ul class="project-role">
               <li>Redis 완전 다운 상태에서도 Gateway 인증 503 완전 제거</li>
+              <li>Redis 의도적 다운 시뮬레이션(10 VUs) 결과 <strong>성공률 100%, avg 응답 1.1초</strong> 유지 확인 — Redis 정상 시 baseline(120ms) 대비 지연은 있으나 서비스 중단 없음</li>
               <li>Circuit Breaker의 상태 전이(CLOSED → OPEN → HALF-OPEN) 흐름을 실전에서 디버깅하며 동작 방식을 정확히 이해</li>
               <li>fallback 처리 시 예외 유형을 과도하게 세분화하면 오히려 예외 경로가 늘어나 버그를 유발할 수 있음을 확인</li>
             </ul>
