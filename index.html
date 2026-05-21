@@ -445,66 +445,131 @@
 
             <h4 class="project-subtitle">해결 과정</h4>
             <ul class="project-role">
-              <li><strong>1단계 — 트랜잭션 분리:</strong> login()에 Propagation.NOT_SUPPORTED 적용, DB write 로직을 LoginWriter 별도 빈으로 분리<br/>
-                BCrypt 연산 구간에서 트랜잭션을 보류시켜 커넥션 점유 차단, DB 커넥션 고갈 해소</li>
-              <li><strong>2단계 — BCrypt CF 9 시도 (추가 최적화):</strong> 트랜잭션 분리 후 BCrypt Cost Factor를 10 → 9로 낮추어 연산 속도를 더 높이려 했으나, <strong>실패율 76.66%, p99 16.93초로 오히려 악화</strong><br/>
-                연산이 빨라지자 요청이 더 빠르게 다음 단계로 쏟아지며 1 vCPU 환경에서 CPU 컨텍스트 스위칭이 새로운 병목으로 부상</li>
-              <li><strong>3단계 — BCrypt 10 롤백:</strong> 1 vCPU 환경에서 BCrypt 10의 의도적 연산 지연이 유입 속도를 자연스럽게 조절하는 throttle 역할을 함을 파악, Cost Factor를 10으로 복구</li>
+              <li><strong>1단계 — 트랜잭션 분리 (300m CPU):</strong> login()에 Propagation.NOT_SUPPORTED 적용, DB write 로직을 LoginWriter 별도 빈으로 분리하여 BCrypt 연산 구간의 커넥션 점유를 차단<br/>
+                그러나 300m 단일 코어 환경에서는 CPU 자체가 병목이 되어 코드 개선 효과가 수치로 나타나지 않음 (10 VUs 기준 avg 15.88초)</li>
+              <li><strong>2단계 — 인프라 사양 업그레이드 (300m → 1000m):</strong> CPU limit을 1000m로 상향 후 동일 코드 재측정<br/>
+                코드 개선 효과가 비로소 체감되어 gradual 부하 기준 <strong>avg 149ms, 성공률 100%</strong> 달성</li>
+              <li><strong>3단계 — BCrypt CF 9 추가 실험 (1000m CPU):</strong> 추가 최적화를 기대하며 Cost Factor를 10 → 9로 낮추어 테스트<br/>
+                10 VUs 동시 진입 시 avg 1.12초로 오히려 퇴행 — 연산이 빨라지자 요청이 한꺼번에 다음 단계로 쏟아지며 CPU 컨텍스트 스위칭이 새로운 병목으로 부상</li>
+              <li><strong>4단계 — BCrypt 10 복구:</strong> BCrypt 10의 의도적 연산 지연이 1 vCPU 환경에서 유입 속도를 자연 조절하는 throttle 역할임을 파악, Cost Factor를 10으로 복구</li>
             </ul>
 
-            <h4 class="project-subtitle">튜닝 과정</h4>
+            <h4 class="project-subtitle">단계별 측정 결과</h4>
             <div style="overflow-x:auto; margin: 10px 0 4px;">
               <table style="width:100%; border-collapse:collapse; font-size:13px; color:#ccc;">
                 <thead>
                   <tr style="border-bottom:1px solid #444;">
                     <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">단계</th>
-                    <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">상태</th>
-                    <th style="text-align:center; padding:7px 12px; color:#888; font-weight:500;">VUs</th>
-                    <th style="text-align:right; padding:7px 12px; color:#888; font-weight:500;">성공률</th>
-                    <th style="text-align:right; padding:7px 12px; color:#888; font-weight:500;">p99</th>
+                    <th style="text-align:center; padding:7px 12px; color:#888; font-weight:500;">CPU</th>
+                    <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">소프트웨어</th>
+                    <th style="text-align:center; padding:7px 12px; color:#888; font-weight:500;">부하</th>
+                    <th style="text-align:right; padding:7px 12px; color:#888; font-weight:500;">avg / 성공률</th>
                     <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">핵심 발견</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr style="border-bottom:1px solid #2e2e2e;">
-                    <td style="padding:7px 12px; color:#e05555;">① 초기</td>
-                    <td style="padding:7px 12px;">기존 코드 (BCrypt 10, in @Transactional)</td>
-                    <td style="text-align:center; padding:7px 12px;">40</td>
-                    <td style="text-align:right; padding:7px 12px; color:#e05555;">97.6%</td>
-                    <td style="text-align:right; padding:7px 12px; color:#e05555;">11.75초</td>
-                    <td style="padding:7px 12px; color:#888;">dropped 223, DB 커넥션 고갈</td>
+                    <td style="padding:7px 12px; color:#e05555;">① 문제 발견</td>
+                    <td style="text-align:center; padding:7px 12px;">300m</td>
+                    <td style="padding:7px 12px;">기존 코드</td>
+                    <td style="text-align:center; padding:7px 12px;">40 VUs</td>
+                    <td style="text-align:right; padding:7px 12px; color:#e05555;">7.37초 / 97.6%</td>
+                    <td style="padding:7px 12px; color:#888;">p99 11.75초, dropped 223</td>
                   </tr>
                   <tr style="border-bottom:1px solid #2e2e2e;">
-                    <td style="padding:7px 12px; color:#e05555;">② BCrypt 9</td>
-                    <td style="padding:7px 12px;">트랜잭션 분리 + CF 9 추가 시도</td>
-                    <td style="text-align:center; padding:7px 12px;">30</td>
-                    <td style="text-align:right; padding:7px 12px; color:#e05555;">23.3%</td>
-                    <td style="text-align:right; padding:7px 12px; color:#e05555;">16.93초</td>
-                    <td style="padding:7px 12px; color:#888;">VU 줄였음에도 악화, CPU 병목으로 이동</td>
+                    <td style="padding:7px 12px; color:#e09030;">② 로직 개선</td>
+                    <td style="text-align:center; padding:7px 12px;">300m</td>
+                    <td style="padding:7px 12px;">트랜잭션 분리 + BCrypt 10</td>
+                    <td style="text-align:center; padding:7px 12px;">10 VUs</td>
+                    <td style="text-align:right; padding:7px 12px; color:#e09030;">15.88초 / 100%</td>
+                    <td style="padding:7px 12px; color:#888;">CPU Bound — 개선 효과 갇힘</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #2e2e2e;">
+                    <td style="padding:7px 12px; color:#4caf50;">③ 인프라 확장</td>
+                    <td style="text-align:center; padding:7px 12px;">1000m</td>
+                    <td style="padding:7px 12px;">트랜잭션 분리 + BCrypt 10</td>
+                    <td style="text-align:center; padding:7px 12px;">Gradual</td>
+                    <td style="text-align:right; padding:7px 12px; color:#4caf50;">149ms / 100%</td>
+                    <td style="padding:7px 12px; color:#888;">로직 개선 효과 체감 (최종)</td>
                   </tr>
                   <tr>
-                    <td style="padding:7px 12px; color:#4caf50;">③ BCrypt 10 복구</td>
-                    <td style="padding:7px 12px;">트랜잭션 분리 유지 + CF 10 롤백</td>
-                    <td style="text-align:center; padding:7px 12px;">10</td>
-                    <td style="text-align:right; padding:7px 12px; color:#4caf50;">100%</td>
-                    <td style="text-align:right; padding:7px 12px; color:#4caf50;">417ms</td>
-                    <td style="padding:7px 12px; color:#888;">1 vCPU 안정 운영 범위</td>
+                    <td style="padding:7px 12px; color:#e09030;">④ BCrypt 9 실험</td>
+                    <td style="text-align:center; padding:7px 12px;">1000m</td>
+                    <td style="padding:7px 12px;">트랜잭션 분리 + BCrypt 9</td>
+                    <td style="text-align:center; padding:7px 12px;">10 VUs</td>
+                    <td style="text-align:right; padding:7px 12px; color:#e09030;">1.12초 / 100%</td>
+                    <td style="padding:7px 12px; color:#888;">성능 역설 — BCrypt 10 복구</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <p class="body-text" style="font-size:12px; color:#606060; margin-top:6px;">
-              ※ 각 단계의 VU 수가 다름 — 부하를 줄여가며 안정적으로 처리 가능한 범위를 탐색하는 과정이었음.<br />
-              Grafana에서 1 vCPU 환경의 Load Average 임계점을 확인한 후, VU를 높일수록 인프라 한계에 수렴함을 파악.
+              ※ ②→③은 코드와 인프라가 동시에 바뀐 구간 — 개선의 주원인이 코드인지 인프라인지 단일 변수로 분리하기 어려움.<br />
+              ③→④는 동일 인프라(1000m)에서 BCrypt CF만 변경한 통제된 비교.
+            </p>
+
+            <h4 class="project-subtitle">BCrypt CF 9 성능 역설 — 심층 분석</h4>
+
+            <p class="body-text" style="color:#666; margin-bottom:6px;">트랜잭션 분리 후 login() 실행 흐름</p>
+            <ul class="project-role" style="font-family:'Courier New',monospace; margin-bottom:14px;">
+              <li style="color:#555; list-style:none; padding-left:0;">// @Transactional(propagation = NOT_SUPPORTED)</li>
+              <li>① userRepository.findByEmailAndSocialType() <span style="color:#666;">← readOnly TX: 조회 후 커넥션 즉시 반납</span></li>
+              <li style="color:#e09030;">② passwordEncoder.matches() <span style="color:#666;">← 커넥션 없음 · BCrypt 연산만 (CF 10 ≈ 300~500ms)</span></li>
+              <li>③ tokenProvider.generateAccessToken() / generateRefreshToken() <span style="color:#666;">← JWT 서명 · CPU 작업 (I/O 없음)</span></li>
+              <li>④ loginWriter.commitLoginWrites() <span style="color:#666;">← TX2: refreshToken + lastLoginIp DB 저장 후 반납</span></li>
+              <li>⑤ executeWriteWithCb(redisTemplate.set()) <span style="color:#666;">← Redis write (Circuit Breaker 포함)</span></li>
+            </ul>
+
+            <ul class="project-role">
+              <li>트랜잭션 분리 후 ② BCrypt 구간은 DB 커넥션을 점유하지 않는다. 그러나 BCrypt는 여전히 단일 요청이 ② 단계에서 보내는 <strong>체류 시간</strong>이다 — 이 시간이 짧아질수록 요청이 빠르게 ③④⑤로 쏟아지는 구조</li>
+              <li><strong>CF 10 (~300–500ms):</strong> 10개 VU가 ② 단계에 시간차를 두고 분포 → ③④⑤에 진입하는 스레드가 자연스럽게 직렬화 → 1 vCPU에서 JWT 서명·DB write 부하 분산</li>
+              <li><strong>CF 9 (~150–250ms):</strong> BCrypt 2배 빠름 → 10개 VU가 ②를 거의 동시에 통과 → ③ JWT 서명 + ④ DB write + ⑤ Redis에 스레드 동시 몰림 → CPU-intensive 작업 간 컨텍스트 스위칭 폭발</li>
+            </ul>
+
+            <h4 class="project-subtitle">CF 10 vs CF 9 동시성 비교</h4>
+            <div style="overflow-x:auto; margin: 10px 0 4px;">
+              <table style="width:100%; border-collapse:collapse; font-size:13px; color:#ccc;">
+                <thead>
+                  <tr style="border-bottom:1px solid #444;">
+                    <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">항목</th>
+                    <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">BCrypt CF 10</th>
+                    <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">BCrypt CF 9</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid #2e2e2e;">
+                    <td style="padding:7px 12px; color:#888;">② BCrypt 소요</td>
+                    <td style="padding:7px 12px;">~300–500ms / req</td>
+                    <td style="padding:7px 12px;">~150–250ms / req</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #2e2e2e;">
+                    <td style="padding:7px 12px; color:#888;">③④⑤ 진입 패턴</td>
+                    <td style="padding:7px 12px; color:#4caf50;">시간차 분산 — 자연 직렬화</td>
+                    <td style="padding:7px 12px; color:#e05555;">동시 쏠림 — 컨텍스트 스위칭↑</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #2e2e2e;">
+                    <td style="padding:7px 12px; color:#888;">1 vCPU CPU 부하</td>
+                    <td style="padding:7px 12px; color:#4caf50;">분산 처리 → 안정</td>
+                    <td style="padding:7px 12px; color:#e05555;">동시 CPU 집약 → 병목 이동</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:7px 12px; color:#888;">10 VUs 결과</td>
+                    <td style="padding:7px 12px; color:#4caf50;">avg 149ms / 100%</td>
+                    <td style="padding:7px 12px; color:#e05555;">avg 1.12초 / 100%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="body-text" style="font-size:12px; color:#606060; margin-top:6px;">
+              ※ BCrypt 10의 느린 연산이 역설적으로 후속 단계의 도착률(arrival rate)을 억제하는 backpressure로 기능하고 있었음.<br/>
+              단일 스테이지의 속도 최적화가 파이프라인 전체 처리량을 보장하지 않는다는 것을 데이터로 확인한 사례.
             </p>
 
             <h4 class="project-subtitle">결과 및 인사이트</h4>
             <ul class="project-role">
-              <li>트랜잭션 구조 개선으로 DB 커넥션 고갈 해소, BCrypt 10 유지 + 10 VUs 기준 <strong>성공률 100%, p99 417ms</strong> 안정 달성</li>
-              <li>BCrypt CF를 낮추면 빨라질 것이라는 예상과 달리 오히려 악화<br/>
-                  연산 속도가 빨라지자 요청이 동시에 쏟아지며 CPU 컨텍스트 스위칭이 새로운 병목으로 부상. BCrypt 10의 느린 연산이 1 vCPU 환경에서 자연스러운 유입 속도 조절 역할을 하고 있었음</li>
-              <li>Grafana Load Average 지표로 단일 코어 임계점을 수치로 확인<br/>
-                  코드 최적화만으로 해결되지 않는 인프라 수준의 한계를 데이터로 파악하는 경험</li>
+              <li>트랜잭션 구조 개선 + CPU 1000m 환경에서 gradual 부하 기준 <strong>avg 149ms, 성공률 100%, p99 417ms</strong> 안정 달성</li>
+              <li>300m CPU에서는 코드 수정 후에도 avg 15.88초 — 로직 개선만으로는 한계가 있었고, 인프라 확장 후 비로소 효과가 가시화됨</li>
+              <li>BCrypt CF를 낮추면 빨라질 것이라는 예상과 달리 오히려 퇴행 — 단일 스테이지 최적화가 전체 파이프라인의 병목 위치를 이동시킨다는 것을 체감</li>
               <li>단순히 커넥션 수를 늘리는 것이 아니라 커넥션 점유 시간 자체를 줄이는 방향으로 문제를 접근</li>
             </ul>
           </div>
