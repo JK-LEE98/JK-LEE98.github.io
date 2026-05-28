@@ -730,6 +730,119 @@
         </article>
       </section>
 
+      <section id="ai-workflow" class="section">
+        <h2 class="section-title">AI Agent 활용</h2>
+
+        <article class="project-card">
+          <header class="project-header">
+            <div>
+              <h3>Claude Code 기반 이슈 주도 개발 프로세스</h3>
+              <p class="project-tech">Claude Code / Gemini Code Assist / GitHub Actions</p>
+            </div>
+            <button type="button" class="project-toggle" data-target="ai-workflow-detail">
+              내용 상세 보기
+            </button>
+          </header>
+
+          <div id="ai-workflow-detail" class="project-detail">
+
+            <h4 class="project-subtitle">전체 워크플로우</h4>
+            <p class="body-text">
+              단순 코드 생성 도구가 아닌 <strong>아키텍처 설계 파트너</strong>로 Claude Code를 활용했습니다.<br/>
+              설계 논의 → 이슈 등록 → 구현 → AI 코드 리뷰 → 머지로 이어지는 일관된 흐름을 구성했습니다.
+            </p>
+            <ul class="project-role">
+              <li>Claude와 설계 논의 — 아키텍처 결정, 장애 시나리오 검토, 트레이드오프 분석</li>
+              <li>Notion 이슈 정리 — 논의 결과를 이슈 단위로 구조화</li>
+              <li>GitHub Issue 등록 → 자동 브랜치 생성 — 라벨 기반 prefix + 이슈번호 포함 브랜치명</li>
+              <li>Claude와 함께 구현 — 메모리 시스템으로 세션 간 컨텍스트 지속</li>
+              <li>PR → Gemini 자동 리뷰 + 팀원 1인 approve → 머지</li>
+            </ul>
+
+            <h4 class="project-subtitle">설계 단계 AI 활용 — 실제 결정 사례</h4>
+            <ul class="project-role">
+              <li><strong>Gateway 신뢰 경계 설계:</strong> 각 서비스가 JWT를 개별 검증하는 구조의 SPOF 문제를 논의 → Gateway 단일 검증 + X-User-Id 헤더 전달 방식으로 결정 (Issue #4)</li>
+              <li><strong>Redis 장애 대응 설계:</strong> Redis 단일 의존 구조의 장애 전파 시나리오를 함께 분석 → DB-first + Circuit Breaker read/write 분리 패턴 결정</li>
+              <li><strong>트랜잭션 분리 패턴:</strong> k6 모니터링 결과를 함께 분석하여 BCrypt가 @Transactional 범위 안에서 커넥션을 점유하는 원인 추적 → NOT_SUPPORTED + LoginWriter 빈 분리 결정</li>
+              <li><strong>Email Prefetch 보안 이슈:</strong> 증상(one-time 토큰 소모)만으로 원인을 Claude와 함께 추적 → 이메일 클라이언트 prefetch 특성 파악 → GET/POST 메서드 분리로 해결</li>
+              <li><strong>Whitelist 정책 관리 개선:</strong> 하드코딩 → DB+Caffeine → ConfigMap 3단계 개선 방향 논의 → GitHub Actions 연동으로 재빌드 없이 정책 반영하는 구조 설계</li>
+            </ul>
+
+            <h4 class="project-subtitle">컨텍스트 지속성 설계 — 메모리 시스템</h4>
+            <p class="body-text">
+              Claude Code는 기본적으로 세션이 끊기면 컨텍스트를 잃습니다.
+              작업 단위가 완료될 때마다 Claude에게 결과를 인지시키고 메모리에 저장하도록 명시적으로 지시해,
+              터미널 재시작 이후에도 이전 작업 맥락을 이어서 진행할 수 있도록 구성했습니다.
+            </p>
+            <div style="overflow-x:auto; margin: 10px 0 4px;">
+              <table style="width:100%; border-collapse:collapse; font-size:13px; color:#ccc;">
+                <thead>
+                  <tr style="border-bottom:1px solid #444;">
+                    <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">메모리 파일</th>
+                    <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">유형</th>
+                    <th style="text-align:left; padding:7px 12px; color:#888; font-weight:500;">역할</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid #2e2e2e;">
+                    <td style="padding:7px 12px; color:#ccc;">project_auth_flow.md</td>
+                    <td style="padding:7px 12px; color:#4caf50;">project</td>
+                    <td style="padding:7px 12px; color:#888;">토큰 구조, Redis key, RTR, 프론트 연동 체크리스트</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #2e2e2e;">
+                    <td style="padding:7px 12px; color:#ccc;">project_redis_resilience.md</td>
+                    <td style="padding:7px 12px; color:#4caf50;">project</td>
+                    <td style="padding:7px 12px; color:#888;">CB 설정값, DB-first 패턴, fallback 흐름 완료 내역</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #2e2e2e;">
+                    <td style="padding:7px 12px; color:#ccc;">project_auth_migration.md</td>
+                    <td style="padding:7px 12px; color:#4caf50;">project</td>
+                    <td style="padding:7px 12px; color:#888;">Gateway 마이그레이션 진행 상황, 서비스별 잔여 작업 추적</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #2e2e2e;">
+                    <td style="padding:7px 12px; color:#ccc;">feedback_git_operations.md</td>
+                    <td style="padding:7px 12px; color:#e09030;">feedback</td>
+                    <td style="padding:7px 12px; color:#888;">git 명령 자동 실행 금지 — 직접 타이핑하며 흐름을 이해하기 위한 규칙</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:7px 12px; color:#ccc;">feedback_no_direct_edits.md</td>
+                    <td style="padding:7px 12px; color:#e09030;">feedback</td>
+                    <td style="padding:7px 12px; color:#888;">기본적으로 코드 블록 제안만 — 명시적 요청 시에만 직접 수정</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="body-text" style="font-size:12px; color:#606060; margin-top:6px;">
+              ※ feedback 타입 메모리는 "무엇을 했는가"가 아니라 "Claude가 어떻게 행동해야 하는가"를 정의한 것으로,
+              AI 도구의 행동 방식을 프로젝트에 맞게 커스터마이징한 결과입니다.
+            </p>
+
+            <h4 class="project-subtitle">docs/ 폴더 — 양방향 컨텍스트 설계</h4>
+            <ul class="project-role">
+              <li>Claude가 읽는 컨텍스트이자 팀원이 보는 설계 문서로 동시 활용</li>
+              <li>총 50개 이상의 MD 파일, <code>INDEX.md</code>로 전체 인덱싱 — 새 작업 시 INDEX.md만 읽히면 전체 프로젝트 맥락 파악 가능하도록 설계</li>
+              <li>인증 흐름, 장애 대응, Kafka 토픽, Elasticsearch 설계, k3s 인프라, CI/CD 전략까지 모든 설계 결정을 문서화</li>
+            </ul>
+
+            <h4 class="project-subtitle">Gemini Code Assist — AI 코드 리뷰 자동화</h4>
+            <ul class="project-role">
+              <li>PR 생성 시 Gemini Code Assist가 자동으로 코드 리뷰 수행 (GitHub Marketplace 앱)</li>
+              <li><code>.gemini/styleguide.md</code>로 리뷰 방향을 팀 기준에 맞게 커스터마이징 — 한국어 리뷰, 레이어 책임 분리·@Transactional 범위·N+1·보안 중심</li>
+              <li>MEDIUM 이상 이슈만 코멘트, PR당 최대 12개로 노이즈 제어</li>
+              <li>AI 자동 리뷰 + 팀원 1인 approve 병행으로 빠른 피드백 루프 구성</li>
+            </ul>
+
+            <h4 class="project-subtitle">GitHub Actions 자동화</h4>
+            <ul class="project-role">
+              <li><strong>자동 브랜치 생성:</strong> 이슈 오픈 시 라벨(feature/fix/refactor 등)과 이슈 폼 입력값 조합 → <code>{prefix}/{package}/{keyword}/{이슈번호}</code> 형식으로 자동 생성</li>
+              <li><strong>선택적 CI:</strong> 변경된 모듈만 테스트 실행 — common 또는 루트 설정 변경 시 전체, 아닌 경우 해당 서비스만 (dorny/paths-filter 활용)</li>
+              <li><strong>PR 리뷰 정책:</strong> docs-only PR은 approve 없이 통과, 코드 변경은 1인 approve 필수</li>
+            </ul>
+
+          </div>
+        </article>
+      </section>
+
       <section id="contact" class="section">
         <h2 class="section-title">Contact</h2>
         <ul class="contact-list">
@@ -753,6 +866,7 @@
         <a href="#skillset" class="nav-item">SkillSet</a>
         <a href="#portfolio" class="nav-item">Portfolio</a>
         <a href="#troubleshooting" class="nav-item">Trouble Shootings</a>
+        <a href="#ai-workflow" class="nav-item">AI Agent</a>
         <a href="#contact" class="nav-item">Contact</a>
       </nav>
     </aside>
